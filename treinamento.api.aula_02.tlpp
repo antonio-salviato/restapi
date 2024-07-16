@@ -1,0 +1,75 @@
+#include 'totvs.ch'
+#include 'tlpp-core.th'
+#include 'tlpp-rest.th'
+
+/*/{Protheus.doc} CLIENTES
+    Classe para uso como API listagem de clientes.
+    @author Klaus Wolfgram
+    /*/
+
+NAMESPACE treinamento.api
+  
+class CARGAS
+
+    public method new() constructor
+    
+    @get(endpoint='/carga',description='cargas')
+    public method listar() as logical
+end class
+
+method new() class CARGAS
+
+
+return self
+
+method listar() class CARGAS
+
+    Local lRPC          as logical
+    Local cErrorStack   as character
+    Local cErrorDescr   as character
+    Local err           as object
+    Local jResp         as json
+    Local jCarga      as json
+
+    IF type('cEmpAnt') <> 'C'
+        rpcSetEnv('99','01')
+        lRPC            := .T.
+    EndIF
+
+    try
+
+        jResp           := jsonObject():new()
+        jResp['DAI']    := array(0)
+
+        dbSelectArea("DAI")
+        dbSetOrder(1)
+        dbGoTop()
+
+        While .not. eof()
+
+            jCarga              := jsonObject():new()
+            jCarga['codigo'   ] := DAI_COD
+            jCarga['pedido'     ] := DAI_PEDIDO
+            jCarga['Data'       ] := DAI_DATA
+
+
+            aadd(jResp['DAI'],jCarga)
+
+            dbSkip()
+
+        Enddo
+
+        oRest:setResponse(jResp:toJson())
+
+    catch err
+
+        cErrorStack     := err:errorstack
+        cErrorDescr     := err:description
+
+    endtry   
+
+    IF lRPC
+        rpcClearEnv()
+    EndIF     
+
+return .T.
